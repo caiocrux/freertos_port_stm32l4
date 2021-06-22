@@ -1,3 +1,3 @@
 # freertos_port_stm32l4
 
-[![CircleCI](https://circleci.com/gh/circleci/circleci-docs.svg?style=svg)](https://circleci.com/gh/circleci/circleci-docs)
+[![CircleCI](https://circleci.com/gh/caiocrux/freertos_port_stm32l4.svg?style=svg)](https://app.circleci.com/pipelines/github/caiocrux/freertos_port_stm32l4)
