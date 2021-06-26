@@ -19,11 +19,14 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "FreeRTOS.h"
+#include "task.h"
+#include "debug_log.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,7 +52,8 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+static void task_handler_1(void* parameters);
+static void task_handler_2(void* parameters);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -64,6 +68,9 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  TaskHandle_t xHandle_1 = NULL;
+  TaskHandle_t xHandle_2 = NULL;
+  BaseType_t xReturned;
 
   /* USER CODE END 1 */
 
@@ -85,8 +92,16 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+  DEBUG_LOG("hello world in FreeRTOS !\r\n");
+  xReturned = xTaskCreate(task_handler_1,"Task-1",200,"Hello World for Task-1",2,&xHandle_1);
+  configASSERT(xReturned == pdPASS);
 
+  xReturned = xTaskCreate(task_handler_2,"Task-2",200,"Hello World for Task-2",2,&xHandle_2);
+  configASSERT(xReturned == pdPASS);
+  vTaskStartScheduler();
+  DEBUG_LOG("Something terrible wrong happend if you see this message !\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -108,6 +123,7 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Configure the main internal regulator output voltage
   */
@@ -146,11 +162,53 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1;
+  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    Error_Handler();
+  }
 }
 
 /* USER CODE BEGIN 4 */
+static void task_handler_1(void* parameters)
+{
+	while (1){
+		DEBUG_LOG("Hello World ! This is my first Task in FreeRTOS !\r\n");
+		DEBUG_LOG("%s\r\n", (char*) parameters);
+	}
+}
 
+static void task_handler_2(void* parameters)
+{
+	while (1){
+		DEBUG_LOG("Hello World ! This is my second Task in FreeRTOS !\r\n");
+		DEBUG_LOG("%s\r\n", (char*) parameters);
+	}
+
+}
 /* USER CODE END 4 */
+
+ /**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM6 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM6) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
